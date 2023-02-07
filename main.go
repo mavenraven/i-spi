@@ -20,6 +20,35 @@ func main() {
 	fmt.Printf("done")
 }
 
+var primitiveTypes = map[string]struct{}{
+	"bool": {},
+
+	"uint8":  {},
+	"uint16": {},
+	"uint32": {},
+	"uint64": {},
+
+	"int8":  {},
+	"int16": {},
+	"int32": {},
+	"int64": {},
+
+	"float32": {},
+	"float64": {},
+
+	"complex64":  {},
+	"complex128": {},
+
+	"byte": {},
+	"rune": {},
+
+	"uint":    {},
+	"int":     {},
+	"uintptr": {},
+
+	"string": {},
+}
+
 func lintPackages(pkgs map[string]*ast.Package) error {
 	typesInPkg := make(map[string]*ast.TypeSpec)
 	for _, pkg := range pkgs {
@@ -121,13 +150,35 @@ func lintPackages(pkgs map[string]*ast.Package) error {
 					}
 
 					if funcDecl.Type.TypeParams != nil {
-						return fmt.Errorf("function %v must not be generic", funcDecl.Name.Name)
+						panic("this currently isn't possible, but we want to prevent exporting generic methods")
 					}
 
 					for _, param := range funcDecl.Type.Params.List {
-						t := param.Type
-						panic(t)
+						if len(param.Names) == 0 {
+							panic("param names was empty somehow")
+						}
 
+						if _, ok := param.Type.(*ast.StarExpr); ok {
+							return fmt.Errorf("function %v's parameter %v is a pointer", funcDecl.Name.Name, param.Names[0].Name)
+						}
+
+						paramTypeIdentifier, ok := param.Type.(*ast.Ident)
+						if !ok {
+							panic("paramTypeIdentifier could not be cast")
+						}
+
+						if _, ok := primitiveTypes[paramTypeIdentifier.Name]; ok {
+							continue
+						}
+
+						//		if !paramTypeIdentifier.IsExported() {
+						//		return fmt.Errorf("%v must be exported", paramTypeIdentifier.Name)
+						//}
+
+						err := isSerializable(paramTypeIdentifier.Obj.Decl)
+						if err != nil {
+							return fmt.Errorf("unable to serialize param %v: %w", param.Names[0].Name, err)
+						}
 					}
 
 				default:
@@ -137,4 +188,8 @@ func lintPackages(pkgs map[string]*ast.Package) error {
 		}
 	}
 	return nil
+}
+
+func isSerializable(obj any) error {
+	panic("hi")
 }
