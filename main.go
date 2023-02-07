@@ -158,25 +158,7 @@ func lintPackages(pkgs map[string]*ast.Package) error {
 							panic("param names was empty somehow")
 						}
 
-						if _, ok := param.Type.(*ast.StarExpr); ok {
-							return fmt.Errorf("function %v's parameter %v is a pointer", funcDecl.Name.Name, param.Names[0].Name)
-						}
-
-						paramTypeIdentifier, ok := param.Type.(*ast.Ident)
-						if !ok {
-							panic("paramTypeIdentifier could not be cast")
-						}
-
-						if _, ok := primitiveTypes[paramTypeIdentifier.Name]; ok {
-							continue
-						}
-
-						//		if !paramTypeIdentifier.IsExported() {
-						//		return fmt.Errorf("%v must be exported", paramTypeIdentifier.Name)
-						//}
-
-						err := isSerializable(paramTypeIdentifier.Obj.Decl)
-						if err != nil {
+						if err := isSerializable(param.Type); err != nil {
 							return fmt.Errorf("unable to serialize param %v: %w", param.Names[0].Name, err)
 						}
 					}
@@ -190,6 +172,41 @@ func lintPackages(pkgs map[string]*ast.Package) error {
 	return nil
 }
 
-func isSerializable(obj any) error {
-	panic("hi")
+func isSerializable(expr ast.Expr) error {
+	switch expr.(type) {
+	case *ast.Ident:
+		ident := expr.(*ast.Ident)
+		if _, ok := primitiveTypes[ident.Name]; ok {
+			return nil
+		}
+
+		if !ast.IsExported(ident.Name) {
+			return fmt.Errorf("%v type is not exported", ident.Name)
+		}
+
+		objType, ok := ident.Obj.Decl.(*ast.TypeSpec)
+		if !ok {
+			return fmt.Errorf("unable to cast to type spec")
+		}
+
+		return isSerializable(objType.Type)
+	case *ast.ArrayType:
+		arrayType := expr.(*ast.ArrayType)
+		if arrayType.Len == nil {
+			return fmt.Errorf("slices are not serialiazble as they contain a pointer")
+		}
+
+		return isSerializable(arrayType.Elt)
+	case *ast.StarExpr:
+		return fmt.Errorf("pointers are not serializable")
+	case *ast.MapType:
+		return fmt.Errorf("maps are not serialiazble as they contain a pointer")
+	case *ast.FuncType:
+		return fmt.Errorf("functions are not serialiazble")
+	case *ast.StructType:
+		panic("im a struct")
+	default:
+		return fmt.Errorf("expression is not serializable")
+	}
+	return nil
 }
