@@ -72,7 +72,12 @@ func lintPackages(pkgs map[string]*ast.Package) error {
 									return fmt.Errorf("pkg is not a type")
 								}
 
-								if pkgType.TypeParams != nil {
+								pkgStruct, ok := pkgType.Type.(*ast.StructType)
+								if !ok {
+									return fmt.Errorf("pkg must be a struct a type")
+								}
+
+								if len(pkgStruct.Fields.List) != 0 {
 									return fmt.Errorf("pkg must not have any fields")
 								}
 							}
@@ -107,7 +112,9 @@ func lintPackages(pkgs map[string]*ast.Package) error {
 						panic("recvIdentifier could not be cast")
 					}
 
-					panic(recvTypeIdentifier)
+					if recvTypeIdentifier.Name != "pkg" {
+						return fmt.Errorf("function %v's receiver is not package", funcDecl.Name.Name)
+					}
 
 					if funcDecl.Recv.List[0].Names[0].Name != "p" {
 						return fmt.Errorf("function %v should have a receiver named p", funcDecl.Name.Name)
