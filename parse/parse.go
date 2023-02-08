@@ -275,37 +275,31 @@ func statementAccessesValueInIdentifier(stmt ast.Stmt, ident string) bool {
 		return false
 	case *ast.LabeledStmt:
 		labeledStmt := stmt.(*ast.LabeledStmt)
-		panic(labeledStmt)
+		return statementAccessesValueInIdentifier(labeledStmt.Stmt, ident)
 	case *ast.ExprStmt:
 		exprStmt := stmt.(*ast.ExprStmt)
 		return expressionAccessValueInIdentifier(exprStmt.X, ident)
 	case *ast.SendStmt:
 		sendStmt := stmt.(*ast.SendStmt)
-		panic(sendStmt)
+		return expressionAccessValueInIdentifier(sendStmt.Chan, ident) ||
+			expressionAccessValueInIdentifier(sendStmt.Value, ident)
 	case *ast.IncDecStmt:
 		incDecStmt := stmt.(*ast.IncDecStmt)
-		panic(incDecStmt)
+		return expressionAccessValueInIdentifier(incDecStmt.X, ident)
 	case *ast.AssignStmt:
 		assignStmnt := stmt.(*ast.AssignStmt)
-		for _, expr := range assignStmnt.Lhs {
-			if expressionAccessValueInIdentifier(expr, ident) {
-				return true
-			}
-		}
-
 		for _, expr := range assignStmnt.Rhs {
 			if expressionAccessValueInIdentifier(expr, ident) {
 				return true
 			}
 		}
-
 		return false
 	case *ast.GoStmt:
 		goStmt := stmt.(*ast.GoStmt)
-		panic(goStmt)
+		return expressionAccessValueInIdentifier(goStmt.Call, ident)
 	case *ast.DeferStmt:
 		deferStmt := stmt.(*ast.DeferStmt)
-		panic(deferStmt)
+		return expressionAccessValueInIdentifier(deferStmt.Call, ident)
 	case *ast.ReturnStmt:
 		returnStmt := stmt.(*ast.ReturnStmt)
 		panic(returnStmt)
@@ -380,7 +374,7 @@ func expressionAccessValueInIdentifier(expr ast.Expr, identifier string) bool {
 		panic(parenExpr)
 	case *ast.SelectorExpr:
 		selectorExpr := expr.(*ast.SelectorExpr)
-		panic(selectorExpr)
+		return expressionAccessValueInIdentifier(selectorExpr.X, identifier)
 	case *ast.IndexExpr:
 		indexExpr := expr.(*ast.IndexExpr)
 		panic(indexExpr)
@@ -400,7 +394,7 @@ func expressionAccessValueInIdentifier(expr ast.Expr, identifier string) bool {
 				return true
 			}
 		}
-		return false
+		return expressionAccessValueInIdentifier(callExpr.Fun, identifier)
 	case *ast.StarExpr:
 		starExpr := expr.(*ast.StarExpr)
 		panic(starExpr)
