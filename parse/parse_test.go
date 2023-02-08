@@ -15,7 +15,13 @@ func TestStatementUsesIdentifier(t *testing.T) {
 		identifier    string
 		hasIdentifier bool
 	}{
-		"simple assignment": {"x := y", "y", true},
+		"simple assignment rhs with": {"x := y", "y", true},
+		"simple assignment lhs with": {"y := x", "y", true},
+		"simple assignment without":  {"z := x", "y", false},
+
+		"multiple assignment rhs with":    {"x, z := q, y", "y", true},
+		"multiple assignment lhs with":    {"y, q := x, p", "y", true},
+		"multiple assignment lhs without": {"z := x", "y", false},
 	}
 
 	for name, tc := range tests {

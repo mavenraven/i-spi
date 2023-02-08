@@ -250,5 +250,162 @@ func isSerializable(expr ast.Expr) error {
 }
 
 func statementUsesIdent(stmt ast.Stmt, ident string) bool {
+	switch stmt.(type) {
+	case *ast.BadStmt:
+		badStmt := stmt.(*ast.BadStmt)
+		panic(badStmt)
+	case *ast.DeclStmt:
+		declStmt := stmt.(*ast.DeclStmt)
+		panic(declStmt)
+	case *ast.EmptyStmt:
+		emptyStmt := stmt.(*ast.EmptyStmt)
+		panic(emptyStmt)
+	case *ast.LabeledStmt:
+		labeledStmt := stmt.(*ast.LabeledStmt)
+		panic(labeledStmt)
+	case *ast.ExprStmt:
+		exprStmt := stmt.(*ast.ExprStmt)
+		panic(exprStmt)
+	case *ast.SendStmt:
+		sendStmt := stmt.(*ast.SendStmt)
+		panic(sendStmt)
+	case *ast.IncDecStmt:
+		incDecStmt := stmt.(*ast.IncDecStmt)
+		panic(incDecStmt)
+	case *ast.AssignStmt:
+		assignStmnt := stmt.(*ast.AssignStmt)
+		for _, expr := range assignStmnt.Lhs {
+			if exprUsesIdent(expr, ident) {
+				return true
+			}
+		}
+
+		for _, expr := range assignStmnt.Rhs {
+			if exprUsesIdent(expr, ident) {
+				return true
+			}
+		}
+
+		return false
+	case *ast.GoStmt:
+		goStmt := stmt.(*ast.GoStmt)
+		panic(goStmt)
+	case *ast.DeferStmt:
+		deferStmt := stmt.(*ast.DeferStmt)
+		panic(deferStmt)
+	case *ast.ReturnStmt:
+		returnStmt := stmt.(*ast.ReturnStmt)
+		panic(returnStmt)
+	case *ast.BranchStmt:
+		branchStmt := stmt.(*ast.BranchStmt)
+		panic(branchStmt)
+	case *ast.BlockStmt:
+		blockStmt := stmt.(*ast.BlockStmt)
+		for _, stmt := range blockStmt.List {
+			if statementUsesIdent(stmt, ident) {
+				return true
+			}
+		}
+		return false
+	case *ast.IfStmt:
+		ifStmt := stmt.(*ast.IfStmt)
+		panic(ifStmt)
+	case *ast.CaseClause:
+		caseClause := stmt.(*ast.CaseClause)
+		panic(caseClause)
+	case *ast.SwitchStmt:
+		switchStmt := stmt.(*ast.SwitchStmt)
+		panic(switchStmt)
+	case *ast.TypeSwitchStmt:
+		typeSwitchStmt := stmt.(*ast.TypeSwitchStmt)
+		panic(typeSwitchStmt)
+	case *ast.CommClause:
+		commClause := stmt.(*ast.CommClause)
+		panic(commClause)
+	case *ast.SelectStmt:
+		selectStmt := stmt.(*ast.SelectStmt)
+		panic(selectStmt)
+	case *ast.ForStmt:
+		forStmt := stmt.(*ast.ForStmt)
+		panic(forStmt)
+	case *ast.RangeStmt:
+		rangeStmt := stmt.(*ast.RangeStmt)
+		panic(rangeStmt)
+	}
+	return false
+}
+
+func exprUsesIdent(expr ast.Expr, identifier string) bool {
+	switch expr.(type) {
+	case *ast.BadExpr:
+		badExpr := expr.(*ast.BadExpr)
+		panic(badExpr)
+	case *ast.Ident:
+		ident := expr.(*ast.Ident)
+		return ident.Name == identifier
+	case *ast.Ellipsis:
+		ellipsis := expr.(*ast.Ellipsis)
+		panic(ellipsis)
+	case *ast.BasicLit:
+		basicLit := expr.(*ast.BasicLit)
+		panic(basicLit)
+	case *ast.FuncLit:
+		funcLit := expr.(*ast.FuncLit)
+		panic(funcLit)
+	case *ast.CompositeLit:
+		compositeLit := expr.(*ast.CompositeLit)
+		panic(compositeLit)
+	case *ast.ParenExpr:
+		parenExpr := expr.(*ast.ParenExpr)
+		panic(parenExpr)
+	case *ast.SelectorExpr:
+		selectorExpr := expr.(*ast.SelectorExpr)
+		panic(selectorExpr)
+	case *ast.IndexExpr:
+		indexExpr := expr.(*ast.IndexExpr)
+		panic(indexExpr)
+	case *ast.IndexListExpr:
+		indexListExpr := expr.(*ast.IndexListExpr)
+		panic(indexListExpr)
+	case *ast.SliceExpr:
+		sliceExpr := expr.(*ast.SliceExpr)
+		panic(sliceExpr)
+	case *ast.TypeAssertExpr:
+		typeAssertExpr := expr.(*ast.TypeAssertExpr)
+		panic(typeAssertExpr)
+	case *ast.CallExpr:
+		callExpr := expr.(*ast.CallExpr)
+		panic(callExpr)
+	case *ast.StarExpr:
+		starExpr := expr.(*ast.StarExpr)
+		panic(starExpr)
+	case *ast.UnaryExpr:
+		unaryExpr := expr.(*ast.UnaryExpr)
+		panic(unaryExpr)
+	case *ast.BinaryExpr:
+		binaryExpr := expr.(*ast.BinaryExpr)
+		panic(binaryExpr)
+	case *ast.KeyValueExpr:
+		keyValueExpr := expr.(*ast.KeyValueExpr)
+		panic(keyValueExpr)
+	case *ast.ArrayType:
+		arrayType := expr.(*ast.ArrayType)
+		panic(arrayType)
+	case *ast.StructType:
+		structType := expr.(*ast.StructType)
+		panic(structType)
+	case *ast.FuncType:
+		funcType := expr.(*ast.FuncType)
+		panic(funcType)
+	case *ast.InterfaceType:
+		interfaceType := expr.(*ast.InterfaceType)
+		panic(interfaceType)
+	case *ast.MapType:
+		mapType := expr.(*ast.MapType)
+		panic(mapType)
+	case *ast.ChanType:
+		chanType := expr.(*ast.ChanType)
+		panic(chanType)
+	}
 	return false
 }
