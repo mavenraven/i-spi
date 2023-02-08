@@ -9,24 +9,30 @@ import (
 	"testing"
 )
 
-func TestStatementUsesIdentifier(t *testing.T) {
+func TestStatementAccessesValueInIdentifier(t *testing.T) {
 	tests := map[string]struct {
-		statement     string
-		identifier    string
-		hasIdentifier bool
+		statement      string
+		identifier     string
+		usesIdentifier bool
 	}{
-		"simple assignment rhs with": {"x := y", "y", true},
-		"simple assignment lhs with": {"y := x", "y", true},
-		"simple assignment without":  {"z := x", "y", false},
+		"simple assignment with":    {"x := y", "y", true},
+		"simple assignment without": {"z := x", "y", false},
 
-		"multiple assignment rhs with":    {"x, z := q, y", "y", true},
-		"multiple assignment lhs with":    {"y, q := x, p", "y", true},
-		"multiple assignment lhs without": {"z := x", "y", false},
+		"multiple assignment with":    {"x, z := q, y", "y", true},
+		"multiple assignment without": {"z := x", "y", false},
 
 		"empty statement": {";", "y", false},
 
 		"closure": {"func (a string) { fmt.Println(y) }", "y", true},
 		"shadows": {"func (x, y string) { fmt.Println(y) }", "y", false},
+
+		"with const":    {"const x = y", "y", true},
+		"without const": {"const x = z", "y", false},
+
+		"with var":    {"var x = y", "y", true},
+		"without var": {"var x = z", "y", false},
+
+		"type": {"type x struct {}", "y", false},
 	}
 
 	for name, tc := range tests {
@@ -57,7 +63,7 @@ func TestStatementUsesIdentifier(t *testing.T) {
 
 			funcDecl := f.Decls[0].(*ast.FuncDecl)
 
-			assert.Equal(t, tc.hasIdentifier, statementUsesIdent(funcDecl.Body, tc.identifier))
+			assert.Equal(t, tc.usesIdentifier, statementAccessesValueInIdentifier(funcDecl.Body, tc.identifier))
 		})
 
 	}

@@ -249,13 +249,28 @@ func isSerializable(expr ast.Expr) error {
 	return nil
 }
 
-func statementUsesIdent(stmt ast.Stmt, ident string) bool {
+func statementAccessesValueInIdentifier(stmt ast.Stmt, ident string) bool {
 	switch stmt.(type) {
 	case *ast.BadStmt:
 		panic("unreachable")
 	case *ast.DeclStmt:
-		declStmt := stmt.(*ast.DeclStmt)
-		panic(declStmt)
+		genDecl := stmt.(*ast.DeclStmt).Decl.(*ast.GenDecl)
+		for _, spec := range genDecl.Specs {
+			switch spec.(type) {
+			case *ast.ValueSpec:
+				for _, val := range spec.(*ast.ValueSpec).Values {
+					if expressionAccessValueInIdentifier(val, ident) {
+						return true
+					}
+
+					return false
+				}
+			case *ast.TypeSpec:
+				return false
+			case *ast.ImportSpec:
+				panic("unreachable")
+			}
+		}
 	case *ast.EmptyStmt:
 		return false
 	case *ast.LabeledStmt:
@@ -263,7 +278,7 @@ func statementUsesIdent(stmt ast.Stmt, ident string) bool {
 		panic(labeledStmt)
 	case *ast.ExprStmt:
 		exprStmt := stmt.(*ast.ExprStmt)
-		return exprUsesIdent(exprStmt.X, ident)
+		return expressionAccessValueInIdentifier(exprStmt.X, ident)
 	case *ast.SendStmt:
 		sendStmt := stmt.(*ast.SendStmt)
 		panic(sendStmt)
@@ -273,13 +288,13 @@ func statementUsesIdent(stmt ast.Stmt, ident string) bool {
 	case *ast.AssignStmt:
 		assignStmnt := stmt.(*ast.AssignStmt)
 		for _, expr := range assignStmnt.Lhs {
-			if exprUsesIdent(expr, ident) {
+			if expressionAccessValueInIdentifier(expr, ident) {
 				return true
 			}
 		}
 
 		for _, expr := range assignStmnt.Rhs {
-			if exprUsesIdent(expr, ident) {
+			if expressionAccessValueInIdentifier(expr, ident) {
 				return true
 			}
 		}
@@ -300,7 +315,7 @@ func statementUsesIdent(stmt ast.Stmt, ident string) bool {
 	case *ast.BlockStmt:
 		blockStmt := stmt.(*ast.BlockStmt)
 		for _, stmt := range blockStmt.List {
-			if statementUsesIdent(stmt, ident) {
+			if statementAccessesValueInIdentifier(stmt, ident) {
 				return true
 			}
 		}
@@ -333,7 +348,7 @@ func statementUsesIdent(stmt ast.Stmt, ident string) bool {
 	return false
 }
 
-func exprUsesIdent(expr ast.Expr, identifier string) bool {
+func expressionAccessValueInIdentifier(expr ast.Expr, identifier string) bool {
 	switch expr.(type) {
 	case *ast.BadExpr:
 		badExpr := expr.(*ast.BadExpr)
@@ -356,7 +371,7 @@ func exprUsesIdent(expr ast.Expr, identifier string) bool {
 				}
 			}
 		}
-		return statementUsesIdent(funcLit.Body, identifier)
+		return statementAccessesValueInIdentifier(funcLit.Body, identifier)
 	case *ast.CompositeLit:
 		compositeLit := expr.(*ast.CompositeLit)
 		panic(compositeLit)
@@ -381,7 +396,7 @@ func exprUsesIdent(expr ast.Expr, identifier string) bool {
 	case *ast.CallExpr:
 		callExpr := expr.(*ast.CallExpr)
 		for _, arg := range callExpr.Args {
-			if exprUsesIdent(arg, identifier) {
+			if expressionAccessValueInIdentifier(arg, identifier) {
 				return true
 			}
 		}
