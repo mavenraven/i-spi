@@ -302,10 +302,14 @@ func statementAccessesValueInIdentifier(stmt ast.Stmt, ident string) bool {
 		return expressionAccessValueInIdentifier(deferStmt.Call, ident)
 	case *ast.ReturnStmt:
 		returnStmt := stmt.(*ast.ReturnStmt)
-		panic(returnStmt)
+		for _, result := range returnStmt.Results {
+			if expressionAccessValueInIdentifier(result, ident) {
+				return true
+			}
+		}
+		return false
 	case *ast.BranchStmt:
-		branchStmt := stmt.(*ast.BranchStmt)
-		panic(branchStmt)
+		return false
 	case *ast.BlockStmt:
 		blockStmt := stmt.(*ast.BlockStmt)
 		for _, stmt := range blockStmt.List {

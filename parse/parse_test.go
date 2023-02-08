@@ -38,8 +38,8 @@ func TestStatementAccessesValueInIdentifier(t *testing.T) {
 		"labeled with":    {"Hello:\nfmt.Println(y)", "y", true},
 		"labeled without": {"Hello:\nfmt.Println(z)", "y", false},
 
-		"send with rhs": {"c <- y", "y", true},
-		"send with lhs": {"y <- x", "y", true},
+		"send with lhs": {"c <- y", "y", true},
+		"send with rhs": {"y <- x", "y", true},
 		"send without":  {"c <- z", "y", false},
 
 		"inc with":    {"y++", "y", true},
@@ -54,6 +54,11 @@ func TestStatementAccessesValueInIdentifier(t *testing.T) {
 
 		"defer with":    {"defer fmt.Println(y)", "y", true},
 		"defer without": {"defer fmt.Println(z)", "y", false},
+
+		"return with":    {"return x, y", "y", true},
+		"return without": {"return z", "y", false},
+
+		"break": {"continue", "y", false},
 	}
 
 	for name, tc := range tests {
