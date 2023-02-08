@@ -252,20 +252,18 @@ func isSerializable(expr ast.Expr) error {
 func statementUsesIdent(stmt ast.Stmt, ident string) bool {
 	switch stmt.(type) {
 	case *ast.BadStmt:
-		badStmt := stmt.(*ast.BadStmt)
-		panic(badStmt)
+		panic("unreachable")
 	case *ast.DeclStmt:
 		declStmt := stmt.(*ast.DeclStmt)
 		panic(declStmt)
 	case *ast.EmptyStmt:
-		emptyStmt := stmt.(*ast.EmptyStmt)
-		panic(emptyStmt)
+		return false
 	case *ast.LabeledStmt:
 		labeledStmt := stmt.(*ast.LabeledStmt)
 		panic(labeledStmt)
 	case *ast.ExprStmt:
 		exprStmt := stmt.(*ast.ExprStmt)
-		panic(exprStmt)
+		return exprUsesIdent(exprStmt.X, ident)
 	case *ast.SendStmt:
 		sendStmt := stmt.(*ast.SendStmt)
 		panic(sendStmt)
@@ -351,7 +349,14 @@ func exprUsesIdent(expr ast.Expr, identifier string) bool {
 		panic(basicLit)
 	case *ast.FuncLit:
 		funcLit := expr.(*ast.FuncLit)
-		panic(funcLit)
+		for _, param := range funcLit.Type.Params.List {
+			for _, name := range param.Names {
+				if name.Name == identifier {
+					return false
+				}
+			}
+		}
+		return statementUsesIdent(funcLit.Body, identifier)
 	case *ast.CompositeLit:
 		compositeLit := expr.(*ast.CompositeLit)
 		panic(compositeLit)
@@ -375,7 +380,12 @@ func exprUsesIdent(expr ast.Expr, identifier string) bool {
 		panic(typeAssertExpr)
 	case *ast.CallExpr:
 		callExpr := expr.(*ast.CallExpr)
-		panic(callExpr)
+		for _, arg := range callExpr.Args {
+			if exprUsesIdent(arg, identifier) {
+				return true
+			}
+		}
+		return false
 	case *ast.StarExpr:
 		starExpr := expr.(*ast.StarExpr)
 		panic(starExpr)

@@ -22,6 +22,11 @@ func TestStatementUsesIdentifier(t *testing.T) {
 		"multiple assignment rhs with":    {"x, z := q, y", "y", true},
 		"multiple assignment lhs with":    {"y, q := x, p", "y", true},
 		"multiple assignment lhs without": {"z := x", "y", false},
+
+		"empty statement": {";", "y", false},
+
+		"closure": {"func (a string) { fmt.Println(y) }", "y", true},
+		"shadows": {"func (x, y string) { fmt.Println(y) }", "y", false},
 	}
 
 	for name, tc := range tests {
