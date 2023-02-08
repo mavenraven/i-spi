@@ -203,8 +203,29 @@ func isSerializable(expr ast.Expr) error {
 		return fmt.Errorf("maps are not serialiazble as they contain a pointer")
 	case *ast.FuncType:
 		return fmt.Errorf("functions are not serialiazble")
+	case *ast.InterfaceType:
+		return fmt.Errorf("interfaces are not serialiazble")
+	case *ast.ChanType:
+		return fmt.Errorf("channels are not serialiazble")
 	case *ast.StructType:
-		panic("im a struct")
+		structType := expr.(*ast.StructType)
+		for _, f := range structType.Fields.List {
+			if f.Tag != nil {
+				return fmt.Errorf("structs with tags are currently not considered to be serializable")
+			}
+
+			for _, name := range f.Names {
+				if !ast.IsExported(name.Name) {
+					return fmt.Errorf("field %v is not exported", name.Name)
+				}
+			}
+
+			err := isSerializable(f.Type)
+			if err != nil {
+				return err
+			}
+
+		}
 	default:
 		return fmt.Errorf("expression is not serializable")
 	}
